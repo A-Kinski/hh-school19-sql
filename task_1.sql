@@ -84,5 +84,6 @@ CREATE TABLE resume_specialization (
 CREATE TABLE vacancy_resume (
     vacancy_resume_id SERIAL PRIMARY KEY,
     vacancy_id integer REFERENCES vacancy(vacancy_id) NOT NULL,
-    resume_id integer REFERENCES resume(resume_id) NOT NULL
+    resume_id integer REFERENCES resume(resume_id) NOT NULL,
+    creation_date timestamp NOT NULL
 );

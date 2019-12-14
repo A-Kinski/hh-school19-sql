@@ -115,11 +115,13 @@ SELECT
 FROM generate_series(1, 100000) AS g(i);
 
 /* fill vacancy_resume table */
-INSERT INTO vacancy_resume (vacancy_id, resume_id)
+INSERT INTO vacancy_resume (vacancy_id, resume_id, creation_date)
 SELECT
       floor(random()*(10000-1+1))+1 as vacancy_id,
-      floor(random()*(100000-1+1))+1 as resume_id
+      floor(random()*(100000-1+1))+1 as resume_id,
+      now()-(random() * 365 * 24 * 3600 * 5) * '1 second'::interval AS creation_time
 FROM generate_series(1, 50000) AS g(i);
+
 
 /* fill resume_specialization table */
 INSERT INTO resume_specialization (resume_id, specialization_id)
