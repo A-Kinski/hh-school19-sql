@@ -1,4 +1,4 @@
-SELECT avg_from_query.avg_from, avg_to_query.avg_to, avg_sum_query.avg_sum
+SELECT area_id, avg_from_query.avg_from, avg_to_query.avg_to, avg_sum_query.avg_sum
 FROM
        (SELECT area_id,
                (sum(
@@ -6,7 +6,7 @@ FROM
                          then compensation_from
                          else compensation_from * 0.87 end
                     ) / count(*)) as avg_from
-       FROM vacancy_body
+       FROM vacancy_body WHERE compensation_from <> 0
        GROUP BY area_id) as avg_from_query
        JOIN
        (SELECT area_id,
@@ -26,6 +26,8 @@ FROM
                     (case when compensation_gross
                          then compensation_from
                          else compensation_from * 0.87 end)) / 2
-                    ) / count(*)) as avg_sum from vacancy_body WHERE compensation_to <> 0
+                    ) / count(*)) as avg_sum from vacancy_body
+                    WHERE compensation_to <> 0 or compensation_from <> 0
        GROUP BY area_id) as avg_sum_query
-       USING (area_id);
+       USING (area_id)
+ORDER BY area_id;

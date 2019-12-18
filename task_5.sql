@@ -16,5 +16,5 @@ FROM
     ON (vacancy.vacancy_id = selected_vacancy.selected_vacancy_id)
     JOIN vacancy_body
     ON (vacancy.vacancy_body_id = vacancy_body.vacancy_body_id)
-    ORDER BY vacancy_body.name
+ORDER BY vacancy_body.name
 ;

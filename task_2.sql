@@ -84,7 +84,7 @@ SELECT
     (random() * 1000000)::integer AS employer_id,
     (random() > 0.5) AS disabled,
     (random() > 0.5) AS visible,
-    floor(random()*(10122-123+1))+123 as vacancy_body_id,
+    floor(random()*(10000-1+1))+1 as vacancy_body_id,
     (random() * 1000)::int AS area_id
 FROM generate_series(1, 10000) AS g(i);
 
@@ -94,10 +94,17 @@ update vacancy set vacancy_id = nextval('vacancy_vacancy_id_seq');
 
 /* fill resume table */
 
-INSERT INTO resume (user_id, work_experience, work_schedule_type, compensation_from, compensation_to,
+INSERT INTO resume (title, user_id, work_experience, work_schedule_type, compensation_from, compensation_to,
                    text, create_time, disabled, visible)
 SELECT
-      floor(random()*(103-4+1))+4 as user_id,
+      SELECT string_agg(
+                  substr(
+                   '      abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789',
+                      (random() * 77)::integer + 1, 1
+                   ),
+            '')
+      FROM generate_series(1, 1 + (random() * 255 + i % 10)::integer)) AS title,
+      floor(random()*(100-1+1))+1 as user_id,
       floor(random()*(60-1+1))+1 AS work_experience,
       floor(random() * 5)::int AS work_schedule_type,
       25000 + (random() * 150000)::int AS compensation_from,
@@ -133,6 +140,6 @@ FROM generate_series(1, 50000) AS g(i);
 /* fill vacancy_body_specialization table */
 INSERT INTO vacancy_body_specialization (vacancy_body_id, specialization_id)
 SELECT
-      floor(random()*(10122-123+1))+123 as vacancy_body_id,
+      floor(random()*(10000-1+1))+1 as vacancy_body_id,
       floor(random()*(100-1+1))+1 as spezialization_id
 FROM generate_series(1, 50000) AS g(i);
