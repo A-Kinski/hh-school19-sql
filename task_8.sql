@@ -30,9 +30,34 @@ CREATE TRIGGER tr_resume_change
 AFTER UPDATE OR DELETE ON resume
 FOR EACH ROW EXECUTE PROCEDURE process_resume_change();
 
-SELECT resume_id, last_change_time, jsonb_extract_path(old, 'title') as old_title, title
-FROM resume
-JOIN
-resume_archive
-USING (resume_id)
-WHERE resume_id = 1;
+WITH union_table AS
+(
+ SELECT
+       resume_id,
+       create_time,
+       now() as last_change_time,
+       title as old_title,
+       NULL as new_title
+ FROM resume WHERE resume_id = 1
+UNION
+ SELECT
+       resume_id,
+       (jsonb_extract_path(old, 'create_time')->>0)::timestamp as create_time,
+       last_change_time,
+       (jsonb_extract_path(old, 'title')->>0)::text as old_title,
+       NULL AS new_title
+ FROM resume_archive WHERE resume_id = 1)
+SELECT
+      resume_id,
+      CASE
+          WHEN ROW_NUMBER() OVER (ORDER BY last_change_time) = 1
+               THEN create_time
+          ELSE LAG(last_change_time) OVER (ORDER BY last_change_time)
+      END as last_change_time,
+      old_title,
+      CASE
+          WHEN ROW_NUMBER() OVER (ORDER BY last_change_time) = (SELECT count(*) FROM union_table)
+               THEN NULL
+          ELSE LEAD(old_title) OVER (ORDER BY last_change_time)
+      END AS new_title
+FROM union_table;
