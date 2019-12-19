@@ -50,7 +50,7 @@ CREATE TABLE users (
 /* create table resume */
 CREATE TABLE resume (
        resume_id SERIAL PRIMARY KEY,
-       title varchar(255) nit null,
+       title varchar(255) not null,
        user_id INTEGER REFERENCES users(user_id) NOT NULL,
        work_experience integer DEFAULT 0 NOT NULL,
        work_schedule_type integer DEFAULT 0 NOT NULL,

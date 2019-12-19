@@ -86,18 +86,17 @@ SELECT
     (random() > 0.5) AS visible,
     floor(random()*(10000-1+1))+1 as vacancy_body_id,
     (random() * 1000)::int AS area_id
-FROM generate_series(1, 10000) AS g(i);
+FROM generate_series(1, 20000) AS g(i);
 
 DELETE FROM vacancy WHERE expire_time <= creation_time;
 alter sequence vacancy_vacancy_id_seq restart with 1;
 update vacancy set vacancy_id = nextval('vacancy_vacancy_id_seq');
 
 /* fill resume table */
-
 INSERT INTO resume (title, user_id, work_experience, work_schedule_type, compensation_from, compensation_to,
                    text, create_time, disabled, visible)
 SELECT
-      SELECT string_agg(
+      (SELECT string_agg(
                   substr(
                    '      abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789',
                       (random() * 77)::integer + 1, 1
@@ -124,7 +123,7 @@ FROM generate_series(1, 100000) AS g(i);
 /* fill vacancy_resume table */
 INSERT INTO vacancy_resume (vacancy_id, resume_id, creation_date)
 SELECT
-      floor(random()*(10000-1+1))+1 as vacancy_id,
+      floor(random()*((SELECT max(vacancy_id) FROM vacancy)-1+1))+1 as vacancy_id,
       floor(random()*(100000-1+1))+1 as resume_id,
       now()-(random() * 365 * 24 * 3600 * 5) * '1 second'::interval AS creation_time
 FROM generate_series(1, 50000) AS g(i);

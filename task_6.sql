@@ -1,4 +1,3 @@
-explain analyze
 SELECT often.resume_id, agg.arr, often.name
 FROM
     (
