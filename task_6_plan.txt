@@ -1,0 +1,69 @@
+Merge Left Join  (cost=117079.16..118809.78 rows=115166 width=552) (actual time=1039.697..1057.278 rows=39115 loops=1)
+  Merge Cond: (often.resume_id = agg.resume_id)
+  CTE agg
+    ->  GroupAggregate  (cost=4813.47..5649.14 rows=36853 width=36) (actual time=26.209..60.750 rows=39362 loops=1)
+          Group Key: resume_specialization.resume_id
+          ->  Sort  (cost=4813.47..4938.47 rows=50000 width=15) (actual time=26.194..33.851 rows=50000 loops=1)
+                Sort Key: resume_specialization.resume_id
+                Sort Method: quicksort  Memory: 3718kB
+                ->  Hash Join  (cost=3.25..911.06 rows=50000 width=15) (actual time=0.053..14.082 rows=50000 loops=1)
+                      Hash Cond: (resume_specialization.specialization_id = specialization.specialization_id)
+                      ->  Seq Scan on resume_specialization  (cost=0.00..771.00 rows=50000 width=8) (actual time=0.014..4.173 rows=50000 loops=1)
+                      ->  Hash  (cost=2.00..2.00 rows=100 width=15) (actual time=0.031..0.031 rows=100 loops=1)
+                            Buckets: 1024  Batches: 1  Memory Usage: 13kB
+                            ->  Seq Scan on specialization  (cost=0.00..2.00 rows=100 width=15) (actual time=0.005..0.016 rows=100 loops=1)
+  CTE tmp
+    ->  GroupAggregate  (cost=32369.72..37369.72 rows=250000 width=16) (actual time=259.435..364.822 rows=239463 loops=1)
+          Group Key: vacancy_resume.resume_id, vacancy_body_specialization.specialization_id
+          ->  Sort  (cost=32369.72..32994.72 rows=250000 width=8) (actual time=259.425..293.695 rows=248626 loops=1)
+                Sort Key: vacancy_resume.resume_id, vacancy_body_specialization.specialization_id
+                Sort Method: external merge  Disk: 4400kB
+                ->  Hash Join  (cost=2647.95..6535.76 rows=250000 width=8) (actual time=44.822..132.119 rows=248626 loops=1)
+                      Hash Cond: (vacancy.vacancy_body_id = vacancy_body.vacancy_body_id)
+                      ->  Hash Join  (cost=401.58..1351.89 rows=50000 width=8) (actual time=6.572..31.054 rows=49998 loops=1)
+                            Hash Cond: (vacancy_resume.vacancy_id = vacancy.vacancy_id)
+                            ->  Seq Scan on vacancy_resume  (cost=0.00..819.00 rows=50000 width=8) (actual time=0.015..4.893 rows=49998 loops=1)
+                            ->  Hash  (cost=276.26..276.26 rows=10026 width=8) (actual time=6.520..6.520 rows=10026 loops=1)
+                                  Buckets: 16384  Batches: 1  Memory Usage: 520kB
+                                  ->  Seq Scan on vacancy  (cost=0.00..276.26 rows=10026 width=8) (actual time=0.007..3.393 rows=10026 loops=1)
+                      ->  Hash  (cost=1621.37..1621.37 rows=50000 width=12) (actual time=38.176..38.176 rows=50000 loops=1)
+                            Buckets: 65536  Batches: 1  Memory Usage: 2661kB
+                            ->  Hash Join  (cost=582.25..1621.37 rows=50000 width=12) (actual time=4.894..30.473 rows=50000 loops=1)
+                                  Hash Cond: (vacancy_body_specialization.specialization_id = specialization_1.specialization_id)
+                                  ->  Hash Join  (cost=579.00..1481.31 rows=50000 width=12) (actual time=4.825..20.519 rows=50000 loops=1)
+                                        Hash Cond: (vacancy_body_specialization.vacancy_body_id = vacancy_body.vacancy_body_id)
+                                        ->  Seq Scan on vacancy_body_specialization  (cost=0.00..771.00 rows=50000 width=8) (actual time=0.011..4.255 rows=50000 loops=1)
+                                        ->  Hash  (cost=454.00..454.00 rows=10000 width=4) (actual time=4.794..4.794 rows=10000 loops=1)
+                                              Buckets: 16384  Batches: 1  Memory Usage: 480kB
+                                              ->  Seq Scan on vacancy_body  (cost=0.00..454.00 rows=10000 width=4) (actual time=0.006..2.498 rows=10000 loops=1)
+                                  ->  Hash  (cost=2.00..2.00 rows=100 width=4) (actual time=0.061..0.061 rows=100 loops=1)
+                                        Buckets: 1024  Batches: 1  Memory Usage: 12kB
+                                        ->  Seq Scan on specialization specialization_1  (cost=0.00..2.00 rows=100 width=4) (actual time=0.014..0.034 rows=100 loops=1)
+  CTE tmp2
+    ->  Sort  (cost=64229.92..64854.92 rows=250000 width=24) (actual time=847.183..868.540 rows=239463 loops=1)
+          Sort Key: tmp.resume_id, tmp.specialization_id
+          Sort Method: external sort  Disk: 7968kB
+          ->  WindowAgg  (cost=31687.96..36687.96 rows=250000 width=24) (actual time=584.036..699.373 rows=239463 loops=1)
+                ->  Sort  (cost=31687.96..32312.96 rows=250000 width=16) (actual time=584.028..608.163 rows=239463 loops=1)
+                      Sort Key: tmp.resume_id, tmp.c DESC
+                      Sort Method: external sort  Disk: 7032kB
+                      ->  CTE Scan on tmp  (cost=0.00..5000.00 rows=250000 width=16) (actual time=259.438..449.422 rows=239463 loops=1)
+  CTE often
+    ->  Hash Join  (cost=3.25..5631.60 rows=625 width=15) (actual time=847.243..930.287 rows=39115 loops=1)
+          Hash Cond: (tmp2.specialization_id = specialization_2.specialization_id)
+          ->  CTE Scan on tmp2  (cost=0.00..5625.00 rows=1250 width=8) (actual time=847.187..921.641 rows=39115 loops=1)
+                Filter: (rank = 1)
+                Rows Removed by Filter: 200348
+          ->  Hash  (cost=2.00..2.00 rows=100 width=15) (actual time=0.039..0.039 rows=100 loops=1)
+                Buckets: 1024  Batches: 1  Memory Usage: 13kB
+                ->  Seq Scan on specialization specialization_2  (cost=0.00..2.00 rows=100 width=15) (actual time=0.013..0.023 rows=100 loops=1)
+  ->  Sort  (cost=41.52..43.09 rows=625 width=520) (actual time=945.574..947.664 rows=39115 loops=1)
+        Sort Key: often.resume_id
+        Sort Method: quicksort  Memory: 3206kB
+        ->  CTE Scan on often  (cost=0.00..12.50 rows=625 width=520) (actual time=847.246..942.006 rows=39115 loops=1)
+  ->  Sort  (cost=3532.27..3624.40 rows=36853 width=36) (actual time=94.116..99.084 rows=39362 loops=1)
+        Sort Key: agg.resume_id
+        Sort Method: external sort  Disk: 2408kB
+        ->  CTE Scan on agg  (cost=0.00..737.06 rows=36853 width=36) (actual time=26.212..73.421 rows=39362 loops=1)
+Planning time: 2.834 ms
+Execution time: 1065.683 ms
